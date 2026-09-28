@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controle Onboarding — Brunel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F3EF; --surface:#FFFFFF; --ink:#16160F; --sub:#6C6C63;
+  --line:#DEDED4; --yellow:#FFC72C; --yellow-ink:#5A4200; --black:#16160F; --gray:#8C8C81;
+  --green:#DEEFD8; --green-ink:#2E7A3A; --red:#F6D9D3; --red-ink:#B23A22;
+  font-family:Inter,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111110; --surface:#1B1B18; --ink:#F1F1E9; --sub:#A3A398;
+    --line:#332F26; --green:#1F3620; --red:#3A2420;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111110; --surface:#1B1B18; --ink:#F1F1E9; --sub:#A3A398;
+  --line:#332F26; --green:#1F3620; --red:#3A2420;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+h1,h2,h3{font-family:Archivo,sans-serif;margin:0;letter-spacing:-.01em}
+.topbar{background:var(--black);color:#fff;display:flex;align-items:center;gap:22px;
+  padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top,0px));flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px}
+.logo .b{width:30px;height:30px;background:var(--yellow);color:var(--black);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-family:Archivo;font-weight:700;font-size:16px}
+.logo span{font-family:Archivo;font-weight:600;font-size:15px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{background:none;border:0;color:#C9C9BE;padding:8px 13px;border-radius:7px;
+  font-family:Inter;font-size:13px;font-weight:500;cursor:pointer}
+.tabs button.active{background:var(--yellow);color:var(--black)}
+.shell{display:flex;min-height:calc(100vh - 51px);align-items:stretch}
+.side{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);
+  padding:18px 14px;display:flex;flex-direction:column;gap:10px}
+.side h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);font-family:Inter;font-weight:600}
+.side .item{padding:8px 10px;border-radius:7px;font-size:13.5px;cursor:pointer;display:flex;justify-content:space-between}
+.side .item.active{background:var(--yellow);color:var(--black);font-weight:600}
+.side .item:not(.active):hover{background:var(--bg)}
+.side .addline{display:flex;gap:6px;margin-top:6px}
+.side .addline input{flex:1;min-width:0;font-size:12.5px;padding:6px 7px;border:1px solid var(--line);
+  border-radius:6px;background:var(--bg);color:var(--ink)}
+.side .addline button{background:var(--black);color:#fff;border:0;border-radius:6px;padding:0 10px;
+  cursor:pointer;font-size:15px}
+main{flex:1;padding:26px 30px;min-width:0;overflow-x:auto}
+.pagehead{margin-bottom:18px}
+.pagehead p{margin:4px 0 0;color:var(--sub);font-size:13.5px}
+/* Controle */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:920px}
+th,td{padding:9px 12px;font-size:13px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--sub);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;
+  background:var(--bg);position:sticky;top:0}
+tr.sim td{background:var(--green);color:var(--green-ink)}
+tr.nao td{background:var(--red);color:var(--red-ink)}
+td input,td select{font:inherit;font-size:12.5px;border:1px solid transparent;background:transparent;
+  color:inherit;width:100%;padding:3px 4px;border-radius:5px}
+td input:hover,td select:hover,td input:focus,td select:focus{border-color:var(--line);background:var(--surface)}
+.addbtn{margin-top:12px;background:var(--yellow);color:var(--black);border:0;border-radius:7px;
+  padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer}
+.rmcell{color:var(--sub);cursor:pointer;opacity:.5;font-size:12px}
+.rmcell:hover{opacity:1}
+/* Texto */
+.textbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+.textbox textarea{width:100%;min-height:160px;border:1px solid var(--line);border-radius:8px;padding:12px;
+  font:inherit;font-size:13.5px;background:var(--bg);color:var(--ink);resize:vertical}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:24px;text-align:center;color:var(--sub);
+  font-size:13px;background:var(--surface)}
+.drop.over{border-color:var(--yellow);background:var(--bg)}
+.doclist{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.doclist li{display:flex;justify-content:space-between;font-size:13px;background:var(--bg);
+  border:1px solid var(--line);border-radius:7px;padding:7px 10px}
+/* Quiz */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:26px;max-width:520px}
+.card .q{font-family:Archivo;font-size:17px;margin-bottom:18px}
+.opt{display:block;width:100%;text-align:left;padding:11px 14px;border:1px solid var(--line);
+  border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13.5px;margin-bottom:8px;cursor:pointer}
+.opt.correct{background:var(--green);border-color:var(--green-ink);color:var(--green-ink)}
+.opt.wrong{background:var(--red);border-color:var(--red-ink);color:var(--red-ink)}
+.opt[disabled]{cursor:default}
+.score{font-size:13px;color:var(--sub);margin-bottom:14px}
+.qeditor{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:20px;max-width:520px}
+.qeditor input{width:100%;margin-bottom:7px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;
+  font:inherit;font-size:13px;background:var(--bg);color:var(--ink)}
+.qeditor .opts4{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.qeditor label{font-size:11px;color:var(--sub)}
+/* Admin */
+.gauges{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+.gaugecard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 22px;
+  text-align:center;width:200px}
+.gaugecard .lbl{font-size:12px;color:var(--sub);margin-top:8px}
+select.wide{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:7px;
+  background:var(--surface);color:var(--ink);margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo"><div class="b">B</div><span>Controle Onboarding</span></div>
+  <div class="tabs" id="tabs"></div>
+</div>
+<div class="shell">
+  <div class="side" id="side"></div>
+  <main id="main"></main>
+</div>
+
+<script>
+try{ var saved = JSON.parse(localStorage.getItem('brunel-onb-v2')||'null'); }catch(e){ var saved=null; }
+
+var state = saved || {
+  tab:'controle',
+  ams:['Marina Duarte','Rafael Nunes','Isabela Prado'],
+  amFilter:'todos',
+  admissions:[
+    {id:'a1', data:'2026-09-02', cliente:'Vetta Logística', am:'Marina Duarte', dataOnb:'2026-09-05', check:'sim', obs:'Tudo certo.', mod:'Presencial'},
+    {id:'a2', data:'2026-09-10', cliente:'Porto Azul Alimentos', am:'Rafael Nunes', dataOnb:'2026-09-12', check:'nao', obs:'Faltou assinatura do contrato.', mod:'Online'},
+    {id:'a3', data:'2026-09-18', cliente:'Grupo Serrano', am:'Isabela Prado', dataOnb:'2026-09-22', check:'', obs:'', mod:'Presencial'}
+  ],
+  teams:[
+    {id:'t1', name:'RH', text:'', docs:[]},
+    {id:'t2', name:'Folha', text:'', docs:[]},
+    {id:'t3', name:'Contas', text:'', docs:[]}
+  ],
+  activeTeam:'t1',
+  questions:[
+    {id:'q1', text:'Qual documento confirma a admissão do colaborador?', opts:['Contrato assinado','Cartão de visita','E-mail informal','Nenhum'], correct:0},
+    {id:'q2', text:'O que deve ser feito se o onboarding não foi realizado na data prevista?', opts:['Ignorar','Registrar observação e reagendar','Excluir o cadastro','Aguardar sem ação'], correct:1}
+  ],
+  quizIdx:0, quizScore:0, quizWrong:[], quizDone:false, quizAnswered:false,
+  adminAM:'visão geral'
+};
+function save(){ try{ localStorage.setItem('brunel-onb-v2', JSON.stringify(state)); }catch(e){} }
+function el(tag, attrs, kids){
+  var e=document.createElement(tag);
+  for(var k in attrs||{}) if(k==='html') e.innerHTML=attrs[k]; else e.setAttribute(k,attrs[k]);
+  (kids||[]).forEach(function(c){ if(c) e.appendChild(c); });
+  return e;
+}
+function txt(tag, cls, text){ var e=el(tag, cls?{class:cls}:{}); e.textContent=text; return e; }
+
+function pct(list){
+  var withCheck = list.filter(function(a){return a.check;});
+  if(!withCheck.length) return 0;
+  return Math.round(100*withCheck.filter(function(a){return a.check==='sim';}).length/withCheck.length);
+}
+
+function gauge(value, label){
+  var r=46, c=2*Math.PI*r*0.5, off=c*(1-value/100);
+  var svg='<svg width="150" height="90" viewBox="0 0 150 90">'+
+    '<path d="M12,80 A'+r+','+r+' 0 0 1 138,80" fill="none" stroke="var(--line)" stroke-width="12" stroke-linecap="round"/>'+
+    '<path d="M12,80 A'+r+','+r+' 0 0 1 138,80" fill="none" stroke="var(--yellow)" stroke-width="12" stroke-linecap="round" '+
+      'stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'"/>'+
+    '<text x="75" y="72" text-anchor="middle" font-family="Archivo" font-size="24" fill="var(--ink)">'+value+'%</text>'+
+    '</svg>';
+  var box=el('div',{class:'gaugecard', html:svg});
+  box.appendChild(txt('div','lbl',label));
+  return box;
+}
+
+function renderTabs(){
+  var t=document.getElementById('tabs'); t.innerHTML='';
+  [['controle','Controle'],['texto','Texto'],['quiz','Quiz'],['admin','Administrativo']].forEach(function(x){
+    var b=el('button',{}); b.textContent=x[1];
+    if(state.tab===x[0]) b.className='active';
+    b.onclick=function(){ state.tab=x[0]; save(); render(); };
+    t.appendChild(b);
+  });
+}
+
+function renderSide(){
+  var s=document.getElementById('side'); s.innerHTML='';
+  if(state.tab==='controle'){
+    s.appendChild(txt('h3','','Account Managers'));
+    ['todos'].concat(state.ams).forEach(function(a){
+      var it=el('div',{class:'item'+(state.amFilter===a?' active':'')});
+      it.textContent = a==='todos' ? 'Todos' : a;
+      it.onclick=function(){ state.amFilter=a; save(); render(); };
+      s.appendChild(it);
+    });
+    var row=el('div',{class:'addline'});
+    var inp=el('input',{placeholder:'Novo AM'});
+    var btn=el('button',{}); btn.textContent='+';
+    btn.onclick=function(){ if(!inp.value.trim())return; state.ams.push(inp.value.trim()); inp.value=''; save(); render(); };
+    row.appendChild(inp); row.appendChild(btn); s.appendChild(row);
+  } else if(state.tab==='texto'){
+    s.appendChild(txt('h3','','Times envolvidos'));
+    state.teams.forEach(function(tm){
+      var it=el('div',{class:'item'+(state.activeTeam===tm.id?' active':'')});
+      it.textContent=tm.name;
+      it.onclick=function(){ state.activeTeam=tm.id; save(); render(); };
+      s.appendChild(it);
+    });
+    var row=el('div',{class:'addline'});
+    var inp=el('input',{placeholder:'Novo time'});
+    var btn=el('button',{}); btn.textContent='+';
+    btn.onclick=function(){ if(!inp.value.trim())return;
+      var id='t'+Date.now(); state.teams.push({id:id,name:inp.value.trim(),text:'',docs:[]});
+      state.activeTeam=id; inp.value=''; save(); render(); };
+    row.appendChild(inp); row.appendChild(btn); s.appendChild(row);
+  } else if(state.tab==='quiz'){
+    s.appendChild(txt('h3','','Perguntas (adicionáveis)'));
+    state.questions.forEach(function(q,i){
+      var it=el('div',{class:'item'});
+      it.appendChild(txt('span','', (i+1)+'. '+q.text.slice(0,22)+(q.text.length>22?'…':'')));
+      var rm=el('span',{class:'rmcell'}); rm.textContent='✕';
+      rm.onclick=function(ev){ ev.stopPropagation(); state.questions.splice(i,1); resetQuiz(); save(); render(); };
+      it.appendChild(rm);
+      s.appendChild(it);
+    });
+  } else {
+    s.appendChild(txt('h3','','Ranking de AMs'));
+    var ranking = state.ams.map(function(a){
+      return {am:a, p:pct(state.admissions.filter(function(x){return x.am===a;}))};
+    }).sort(function(a,b){return b.p-a.p;});
+    ranking.forEach(function(r){
+      var it=el('div',{class:'item'});
+      it.appendChild(txt('span','',r.am));
+      it.appendChild(txt('span','',r.p+'%'));
+      s.appendChild(it);
+    });
+  }
+}
+
+function resetQuiz(){ state.quizIdx=0; state.quizScore=0; state.quizWrong=[]; state.quizDone=false; state.quizAnswered=false; }
+
+function renderMain(){
+  var m=document.getElementById('main'); m.innerHTML='';
+  if(state.tab==='controle') return renderControle(m);
+  if(state.tab==='texto') return renderTexto(m);
+  if(state.tab==='quiz') return renderQuiz(m);
+  return renderAdmin(m);
+}
+
+function renderControle(m){
+  m.appendChild(el('div',{class:'pagehead',html:'<h1>Aba 1 — Controle</h1><p>Planilha de admissões. Linha muda de cor conforme o check de realização do onboarding.</p>'}));
+  var list = state.amFilter==='todos' ? state.admissions : state.admissions.filter(function(a){return a.am===state.amFilter;});
+  var wrap=el('div',{class:'tablewrap'});
+  var table=el('table',{});
+  var head=el('tr',{},['Data de admissão','Cliente','AM responsável','Data do onboarding','Check','Observações','Modalidade',''].map(function(h){return txt('th','',h);}));
+  table.appendChild(el('thead',{},[head]));
+  var body=el('tbody',{});
+  list.forEach(function(a){
+    var row=el('tr',{class:a.check==='sim'?'sim':(a.check==='nao'?'nao':'')});
+    function cellInput(field,type){
+      var i=el('input',{value:a[field],type:type||'text'});
+      i.oninput=function(){ a[field]=i.value; save(); };
+      return el('td',{},[i]);
+    }
+    row.appendChild(cellInput('data','date'));
+    row.appendChild(cellInput('cliente'));
+    var amSel=el('select',{});
+    state.ams.forEach(function(x){ var o=el('option',{value:x}); o.textContent=x; if(x===a.am)o.setAttribute('selected','selected'); amSel.appendChild(o); });
+    amSel.onchange=function(){ a.am=amSel.value; save(); render(); };
+    row.appendChild(el('td',{},[amSel]));
+    row.appendChild(cellInput('dataOnb','date'));
+    var chkSel=el('select',{});
+    [['','—'],['sim','Sim'],['nao','Não']].forEach(function(o){ var op=el('option',{value:o[0]}); op.textContent=o[1]; if(o[0]===a.check)op.setAttribute('selected','selected'); chkSel.appendChild(op); });
+    chkSel.onchange=function(){ a.check=chkSel.value; save(); render(); };
+    row.appendChild(el('td',{},[chkSel]));
+    row.appendChild(cellInput('obs'));
+    var modSel=el('select',{});
+    ['Presencial','Online'].forEach(function(o){ var op=el('option',{value:o}); op.textContent=o; if(o===a.mod)op.setAttribute('selected','selected'); modSel.appendChild(op); });
+    modSel.onchange=function(){ a.mod=modSel.value; save(); };
+    row.appendChild(el('td',{},[modSel]));
+    var rm=el('span',{class:'rmcell'}); rm.textContent='✕';
+    rm.onclick=function(){ state.admissions=state.admissions.filter(function(x){return x.id!==a.id;}); save(); render(); };
+    row.appendChild(el('td',{},[rm]));
+    body.appendChild(row);
+  });
+  table.appendChild(body);
+  wrap.appendChild(table);
+  m.appendChild(wrap);
+  var addBtn=el('button',{class:'addbtn'}); addBtn.textContent='+ Nova admissão';
+  addBtn.onclick=function(){
+    state.admissions.push({id:'a'+Date.now(), data:'', cliente:'Novo cliente', am:state.ams[0], dataOnb:'', check:'', obs:'', mod:'Presencial'});
+    save(); render();
+  };
+  m.appendChild(addBtn);
+}
+
+function renderTexto(m){
+  var team = state.teams.find(function(t){return t.id===state.activeTeam;}) || state.teams[0];
+  m.appendChild(el('div',{class:'pagehead',html:'<h1>Aba 2 — Texto</h1><p>Conteúdo editável por time envolvido no onboarding.</p>'}));
+  if(!team){ m.appendChild(txt('p','','Nenhum time cadastrado.')); return; }
+  var box=el('div',{class:'textbox'});
+  box.appendChild(txt('h3','',team.name));
+  var ta=el('textarea',{placeholder:'Texto a ser preenchido…'}); ta.value=team.text;
+  ta.oninput=function(){ team.text=ta.value; save(); };
+  box.appendChild(ta);
+  m.appendChild(box);
+
+  var drop=el('div',{class:'drop'}); drop.textContent='Arraste documentos aqui (docs)';
+  drop.ondragover=function(e){ e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave=function(){ drop.classList.remove('over'); };
+  drop.ondrop=function(e){
+    e.preventDefault(); drop.classList.remove('over');
+    Array.prototype.forEach.call(e.dataTransfer.files, function(f){ team.docs.push({name:f.name, size:f.size}); });
+    save(); render();
+  };
+  m.appendChild(drop);
+  var ul=el('ul',{class:'doclist'});
+  team.docs.forEach(function(d,i){
+    var li=el('li',{});
+    li.appendChild(txt('span','', d.name));
+    var rm=el('span',{class:'rmcell'}); rm.textContent='✕';
+    rm.onclick=function(){ team.docs.splice(i,1); save(); render(); };
+    li.appendChild(rm);
+    ul.appendChild(li);
+  });
+  m.appendChild(ul);
+}
+
+function renderQuiz(m){
+  m.appendChild(el('div',{class:'pagehead',html:'<h1>Aba 3 — Quiz</h1><p>Flashcards de verificação de conhecimento sobre o processo de onboarding.</p>'}));
+  var order = state.quizOrder || (state.quizOrder = state.questions.map(function(q){return q.id;}));
+  if(!state.questions.length){ m.appendChild(txt('p','','Nenhuma pergunta cadastrada ainda.')); }
+  else if(state.quizDone){
+    var total=state.questions.length;
+    m.appendChild(el('div',{class:'card'},[
+      txt('div','q','Quiz concluído.'),
+      txt('div','score', state.quizScore+' de '+total+' corretas ('+Math.round(100*state.quizScore/total)+'%).')
+    ]));
+    var again=el('button',{class:'addbtn'}); again.textContent='Refazer quiz';
+    again.onclick=function(){ resetQuiz(); state.quizOrder=state.questions.map(function(q){return q.id;}); save(); render(); };
+    m.appendChild(again);
+  } else {
+    var qid = order[state.quizIdx % order.length];
+    var q = state.questions.find(function(x){return x.id===qid;});
+    if(!q){ state.quizDone=true; save(); render(); return; }
+    var card=el('div',{class:'card'});
+    card.appendChild(txt('div','score', 'Pergunta '+((state.quizIdx%order.length)+1)+' de '+order.length+' · acertos: '+state.quizScore));
+    card.appendChild(txt('div','q', q.text));
+    q.opts.forEach(function(opt,i){
+      var b=el('button',{class:'opt'}); b.textContent=opt;
+      if(state.quizAnswered){
+        b.setAttribute('disabled','disabled');
+        if(i===q.correct) b.className='opt correct';
+        else if(i===state.quizPicked) b.className='opt wrong';
+      }
+      b.onclick=function(){
+        if(state.quizAnswered) return;
+        state.quizAnswered=true; state.quizPicked=i;
+        if(i===q.correct) state.quizScore++;
+        else if(order.indexOf(q.id+'_r')===-1) order.push(q.id);
+        save(); render();
+      };
+      card.appendChild(b);
+    });
+    if(state.quizAnswered){
+      var next=el('button',{class:'addbtn'}); next.textContent = (state.quizIdx+1<order.length) ? 'Próxima' : 'Ver resultado';
+      next.onclick=function(){
+        state.quizIdx++;
+        state.quizAnswered=false;
+        if(state.quizIdx>=order.length) state.quizDone=true;
+        save(); render();
+      };
+      card.appendChild(next);
+    }
+    m.appendChild(card);
+  }
+  // editor
+  var ed=el('div',{class:'qeditor'});
+  ed.appendChild(txt('h3','','Nova pergunta'));
+  var qt=el('input',{placeholder:'Enunciado da pergunta'});
+  ed.appendChild(qt);
+  var optsWrap=el('div',{class:'opts4'});
+  var optInputs=[];
+  for(var i=0;i<4;i++){
+    var oi=el('input',{placeholder:'Alternativa '+(i+1)});
+    optInputs.push(oi); optsWrap.appendChild(oi);
+  }
+  ed.appendChild(optsWrap);
+  ed.appendChild(txt('label','','Índice da alternativa correta (1–4)'));
+  var ci=el('input',{type:'number',min:'1',max:'4',value:'1'});
+  ed.appendChild(ci);
+  var addQ=el('button',{class:'addbtn'}); addQ.textContent='Adicionar pergunta';
+  addQ.style.marginTop='10px';
+  addQ.onclick=function(){
+    var opts=optInputs.map(function(o){return o.value.trim();}).filter(Boolean);
+    if(!qt.value.trim()||opts.length<2) return;
+    var correctIdx=Math.min(Math.max(parseInt(ci.value||'1',10)-1,0),opts.length-1);
+    state.questions.push({id:'q'+Date.now(), text:qt.value.trim(), opts:opts, correct:correctIdx});
+    state.quizOrder=null;
+    save(); render();
+  };
+  ed.appendChild(addQ);
+  m.appendChild(ed);
+}
+
+function renderAdmin(m){
+  m.appendChild(el('div',{class:'pagehead',html:'<h1>Aba 4 — Administrativo</h1><p>Visão consolidada dos onboardings realizados.</p>'}));
+  var sel=el('select',{class:'wide'});
+  ['visão geral'].concat(state.ams).forEach(function(a){
+    var o=el('option',{value:a}); o.textContent = a==='visão geral' ? 'Visão geral' : a;
+    if(a===state.adminAM) o.setAttribute('selected','selected');
+    sel.appendChild(o);
+  });
+  sel.onchange=function(){ state.adminAM=sel.value; save(); render(); };
+  m.appendChild(sel);
+
+  var overall = pct(state.admissions);
+  var scoped = state.adminAM==='visão geral' ? overall : pct(state.admissions.filter(function(a){return a.am===state.adminAM;}));
+  var row=el('div',{class:'gauges'});
+  row.appendChild(gauge(overall, '% onboardings realizados (geral)'));
+  row.appendChild(gauge(scoped, state.adminAM==='visão geral' ? '% no período' : '% — '+state.adminAM));
+  m.appendChild(row);
+}
+
+function render(){ renderTabs(); renderSide(); renderMain(); }
+render();
+</script>
+</body>
+</html>
